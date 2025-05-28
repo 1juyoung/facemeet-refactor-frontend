@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+# 🎥 FaceMeet 리팩토링 중
 
-First, run the development server:
+### 표정으로 소통하는 화상 회의 웹 서비스
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+WebRTC + Socket.io + DeepFace 기반 화상회의 플랫폼
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🙋‍♀️ 프로젝트 소개 및 현재 상황
 
-## Learn More
+이 프로젝트는 2025년 2월 졸업작품으로 팀(백엔드 1명, 프론트 2명, AI 1명)과 함께 개발한 웹 서비스입니다.  
+이후 리팩토링을 진행하면서, 클린 아키텍처와 현대적인 프론트엔드/백엔드 구조에 대해 더 깊이 있게 배우고 있습니다.
 
-To learn more about Next.js, take a look at the following resources:
+> **지금은 혼자서 전체 구조를 다시 설계하고 개선하는 중입니다.**  
+> 코드 품질, 확장성, 유지보수성을 높이는 것이 목표입니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📌 프로젝트 개요
 
-## Deploy on Vercel
+**FaceMeet**는 실시간 화상회의 중 참가자의 표정을 분석하여  
+감정 상태를 시각화하고, 채팅과 회의록 기능까지 제공하는 웹 기반 플랫폼입니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ✨ 주요 기능
+
+- 👥 로그인 / 회원가입
+- 📹 WebRTC 기반 실시간 화상회의
+- 🧠 DeepFace 기반 표정 분석 및 감정 시각화
+- 💬 Socket.io 기반 실시간 채팅
+- 📄 회의록 자동 저장 및 열람 기능
+
+---
+
+## 🧰 기술 스택
+
+| 영역         | 기술                                    |
+| ------------ | --------------------------------------- |
+| Frontend     | React, Next.js, TypeScript, TailwindCSS |
+| Backend      | Next.js, Node.js, Express, Socket.io    |
+| AI 분석 엔진 | Python, DeepFace                        |
+| Database     | MongoDB                                 |
+
+---
+
+## 🔧 리팩토링 목표
+
+- 🧱 **클린 아키텍처 적용**  
+  `domain / application / infra` 구조를 적용해 관심사를 분리하고 테스트 용이성을 확보합니다.
+- ♻️ **컴포넌트 구조 정리 및 재사용성 향상**
+- ⚙️ **상태 관리 개선**  
+  (Zustand, TanStack Query 등 적용)
+- 🧪 **유지보수성과 테스트 가능성 확보**
+
+---
+
+<div align="center">
+
+📌 이 저장소는 리팩토링 과정을 계속 기록하고 업데이트할 예정입니다.  
+작은 개선이라도 놓치지 않고 정리하려 노력하고 있습니다. 😊
+
+</div>
