@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model emotionscore {
+  id         String   @id
+  meeting_id String
+  created_at DateTime @default(now())
+  score      Float
+  meeting    meeting  @relation(fields: [meeting_id], references: [id], map: "EmotionScore_meeting_id_fkey")
+  note       note[]
+
+  @@index([meeting_id], map: "EmotionScore_meeting_id_fkey")
+}
+
+model meeting {
+  id           String         @id
+  title        String
+  created_at   DateTime       @default(now())
+  delete_at    DateTime?
+  emotionscore emotionscore[]
+  note         note[]
+  participant  participant[]
+}
+
+model note {
+  id               String       @id
+  meeting_id       String
+  emotion_score_id String
+  date             DateTime
+  content          String
+  emotionscore     emotionscore @relation(fields: [emotion_score_id], references: [id], map: "Note_emotion_score_id_fkey")
+  meeting          meeting      @relation(fields: [meeting_id], references: [id], map: "Note_meeting_id_fkey")
+
+  @@index([emotion_score_id], map: "Note_emotion_score_id_fkey")
+  @@index([meeting_id], map: "Note_meeting_id_fkey")
+}
+
+model participant {
+  id         String    @id
+  user_id    String
+  meeting_id String
+  joined_at  DateTime
+  left_at    DateTime?
+  meeting    meeting   @relation(fields: [meeting_id], references: [id], map: "Participant_meeting_id_fkey")
+  user       user      @relation(fields: [user_id], references: [id], map: "Participant_user_id_fkey")
+
+  @@index([meeting_id], map: "Participant_meeting_id_fkey")
+  @@index([user_id], map: "Participant_user_id_fkey")
+}
+
+model user {
+  id          String        @id
+  email       String        @unique(map: "User_email_key")
+  password    String
+  nickname    String
+  state       Boolean
+  createdAt   DateTime      @default(now())
+  participant participant[]
+}

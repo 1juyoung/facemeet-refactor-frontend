@@ -45,3 +45,6 @@ next-env.d.ts
 .prettierignore
 eslint.config.mjs
 prettier.config.js
+
+/app/generated/prisma
+prisma/migration_lock.toml
