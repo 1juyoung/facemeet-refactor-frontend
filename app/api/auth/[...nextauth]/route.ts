@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import KakaoProvider from 'next-auth/providers/kakao';
+import { prisma } from '../../../../lib/prisma';
 
 const authOptions = NextAuth({
   providers: [
@@ -9,7 +10,22 @@ const authOptions = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, email }) {
+    async signIn({ user }) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.name! },
+      });
+
+      if (!existingUser) {
+        await prisma.user.create({
+          data: {
+            password: 'kakao_oauth',
+            email: user.name!,
+            nickname: user.name || '익명',
+            state: true,
+          },
+        });
+      }
+
       return true;
     },
 
