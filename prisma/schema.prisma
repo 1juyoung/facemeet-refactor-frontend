@@ -56,7 +56,7 @@ model participant {
 }
 
 model user {
-  id          String        @id
+  id          String        @id @default(uuid())
   email       String        @unique(map: "User_email_key")
   password    String
   nickname    String
