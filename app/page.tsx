@@ -1,9 +1,11 @@
-import { Sidebar } from './src/entities/meeting/Sidebar';
+'use client';
+
+import MainView from './src/views/MainView';
 
 export default function Home() {
   return (
     <div>
-      <Sidebar />
+      <MainView />
     </div>
   );
 }
