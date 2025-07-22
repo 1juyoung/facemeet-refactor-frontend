@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import io from 'socket.io-client';
 import Video from '@/app/components';
 import { WebRTCUser } from '@/app/src/entities/meeting';
+import { CreateSenderPeerConnect } from './CreateSenderPeerConnect';
 
 const pc_config = {
   iceServers: [
@@ -138,39 +139,51 @@ const PeerConnect = () => {
     }
   }, []);
 
-  const createSenderPeerConnection = useCallback(() => {
-    const pc = new RTCPeerConnection(pc_config);
+  const createSenderPeerConnection = useCallback(
+    () =>
+      CreateSenderPeerConnect({
+        socketRef,
+        localStreamRef,
+        sendPCRef,
+        pc_config,
+      }),
+    [socketRef, localStreamRef, sendPCRef, pc_config]
+  );
 
-    pc.onicecandidate = (e) => {
-      if (!(e.candidate && socketRef.current)) {
-        return;
-      }
-      console.log('sender PC onicecandidate');
-      socketRef.current.emit('senderCandidate', {
-        candidate: e.candidate,
-        senderSocketID: socketRef.current.id,
-      });
-    };
-
-    pc.oniceconnectionstatechange = (e) => {
-      console.log(e);
-    };
-
-    if (localStreamRef.current) {
-      console.log('add local stream');
-      localStreamRef.current.getTracks().forEach((track) => {
-        if (!localStreamRef.current) {
-          return;
-        }
-        pc.addTrack(track, localStreamRef.current);
-      });
-    } else {
-      console.log('no local stream');
-    }
-
-    sendPCRef.current = pc;
-  }, []);
-
+  //
+  //const createSenderPeerConnection = useCallback(() => {
+  //  const pc = new RTCPeerConnection(pc_config);
+  //
+  //  pc.onicecandidate = (e) => {
+  //    if (!(e.candidate && socketRef.current)) {
+  //      return;
+  //    }
+  //    console.log('sender PC onicecandidate');
+  //    socketRef.current.emit('senderCandidate', {
+  //      candidate: e.candidate,
+  //      senderSocketID: socketRef.current.id,
+  //    });
+  //  };
+  //
+  //  pc.oniceconnectionstatechange = (e) => {
+  //    console.log(e);
+  //  };
+  //
+  //  if (localStreamRef.current) {
+  //    console.log('add local stream');
+  //    localStreamRef.current.getTracks().forEach((track) => {
+  //      if (!localStreamRef.current) {
+  //        return;
+  //      }
+  //      pc.addTrack(track, localStreamRef.current);
+  //    });
+  //  } else {
+  //    console.log('no local stream');
+  //  }
+  //
+  //  sendPCRef.current = pc;
+  //}, []);
+  //
   const getLocalStream = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
