@@ -65,7 +65,7 @@ export function CreateMeetingDialog({ open, onOpenChange }: CreateMeetingDialogP
         <DialogFooter>
           <Button
             type="submit"
-            className="bg-green-500 hover:bg-green-600"
+            className="bg-brand hover:bg-brand-600"
             onClick={handleCreate}
             disabled={loading || !title.trim()}
           >
