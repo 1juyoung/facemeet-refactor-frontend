@@ -4,9 +4,7 @@ import { useRef, useCallback, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 import { WebRTCUser } from '@/app/src/entities/meeting';
 
-const PC_CONFIG: RTCConfiguration = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-};
+import { getRtcConfig } from './iceConfig';
 
 type SocketRef = React.MutableRefObject<Socket | null>;
 type StreamRef = React.MutableRefObject<MediaStream | null>;
@@ -35,7 +33,7 @@ export function usePeerConnection(): UsePeerConnectionReturn {
   const [users, setUsers] = useState<WebRTCUser[]>([]);
 
   const createSenderPC = useCallback((socketRef: SocketRef, localStreamRef: StreamRef): RTCPeerConnection => {
-    const pc = new RTCPeerConnection(PC_CONFIG);
+    const pc = new RTCPeerConnection(getRtcConfig());
 
     pc.onicecandidate = (e) => {
       if (!e.candidate || !socketRef.current) return;
@@ -75,7 +73,7 @@ export function usePeerConnection(): UsePeerConnectionReturn {
 
   const createReceiverPC = useCallback((socketId: string, socketRef: SocketRef): RTCPeerConnection | undefined => {
     try {
-      const pc = new RTCPeerConnection(PC_CONFIG);
+      const pc = new RTCPeerConnection(getRtcConfig());
       receivePCsRef.current = { ...receivePCsRef.current, [socketId]: pc };
 
       pc.onicecandidate = (e) => {
