@@ -1,12 +1,15 @@
 import { Sidebar } from '../entities/meeting/Sidebar';
-import PeerConnect from '../features/video/model/PeerConnect';
+import MeetingRoomView from './MeetingRoomView';
 
-export default function MeetingView({ meetingId }: { meetingId: string }) {
+interface MeetingViewProps {
+  meetingId: string;
+}
+
+export default function MeetingView({ meetingId }: MeetingViewProps) {
   return (
-    <main>
-      <h1>미팅 view {meetingId}</h1>
+    <main className="flex min-h-screen">
       <Sidebar />
-      <PeerConnect />
+      <MeetingRoomView meetingId={meetingId} />
     </main>
   );
 }

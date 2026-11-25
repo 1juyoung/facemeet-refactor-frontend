@@ -1,9 +1,10 @@
 'use client';
 
 import { MutableRefObject } from 'react';
+import type { Socket } from 'socket.io-client';
 
 interface CreateSenderPeerConnection {
-  socketRef: MutableRefObject<SocketIOClient.Socket | null>;
+  socketRef: MutableRefObject<Socket | null>;
   localStreamRef: MutableRefObject<MediaStream | null>;
   sendPCRef: MutableRefObject<RTCPeerConnection | null>;
   pc_config: RTCConfiguration;
