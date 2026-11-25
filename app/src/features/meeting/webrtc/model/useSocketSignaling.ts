@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback } from 'react';
 import type { Socket } from 'socket.io-client';
+import type { ChatMessage } from '@/app/src/entities/chat/types';
 
 const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
@@ -16,6 +17,8 @@ interface UseSocketSignalingParams {
   onReceiverCandidate: (id: string, candidate: RTCIceCandidateInit) => Promise<void>;
   /** 소켓 연결이 완료된 뒤 호출 (socket.id가 확정된 시점) */
   onConnected?: () => void;
+  onChatHistory?: (messages: ChatMessage[]) => void;
+  onChatMessage?: (message: ChatMessage) => void;
 }
 
 export interface UseSocketSignalingReturn {
@@ -34,6 +37,8 @@ export function useSocketSignaling({
   onReceiverAnswer,
   onReceiverCandidate,
   onConnected,
+  onChatHistory,
+  onChatMessage,
 }: UseSocketSignalingParams): UseSocketSignalingReturn {
   const socketRef = useRef<Socket | null>(null);
 
@@ -69,6 +74,9 @@ export function useSocketSignaling({
         await onReceiverAnswer(data.id, data.sdp);
       });
 
+      socket.on('chat:history', (data: { messages: ChatMessage[] }) => onChatHistory?.(data.messages));
+      socket.on('chat:message', (message: ChatMessage) => onChatMessage?.(message));
+
       socket.on('getReceiverCandidate', async (data: { id: string; candidate: RTCIceCandidateInit }) => {
         if (data.candidate) await onReceiverCandidate(data.id, data.candidate);
       });
@@ -83,6 +91,8 @@ export function useSocketSignaling({
     onReceiverAnswer,
     onReceiverCandidate,
     onConnected,
+    onChatHistory,
+    onChatMessage,
   ]);
 
   useEffect(() => {
