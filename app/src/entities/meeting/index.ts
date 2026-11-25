@@ -1,4 +1,1 @@
-export type WebRTCUser = {
-  id: string;
-  stream: MediaStream;
-};
+export type { WebRTCUser, Meeting, Participant, CreateMeetingRequest, JoinMeetingRequest } from './types';
