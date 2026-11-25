@@ -1,67 +1,63 @@
-<div align="center">
+# FaceMeet
 
-# 🎥 FaceMeet 리팩토링 중
+### Emotion-aware Video Conferencing Platform
 
-### 표정으로 소통하는 화상 회의 웹 서비스
+**표정으로 소통을 확장하는 실시간 화상회의 서비스**
 
-WebRTC + Socket.io + DeepFace 기반 화상회의 플랫폼
+FaceMeet은 화상회의 중 참가자의 표정을 분석해 감정 상태를 보여주는 웹 서비스입니다. <br />
+2024년 졸업작품으로 시작했고 2025년에 WebRTC 통신 구조를 P2P에서 SFU로 바꿨습니다. <br />
+2026년 11월부터는 프론트엔드를 다시 만들고 백엔드 API와 배포 환경을 직접 구축하고 있습니다.
+
+📎 **Backend** [백엔드 리팩토링](https://github.com/1juyoung/facemeet-refactor-backend) · **Original (졸업작품)** [오리지널 코드](https://github.com/1juyoung/facemeet)
+
+---
+## Development History
+ 
+### 01. Graduation Project · 2024.10
+감정 분석 기반 다자간 화상회의 서비스 개발
+ 
+- WebRTC 기반 다자간 화상회의
+- DeepFace 기반 표정 분석과 감정 시각화
+- 프론트엔드·백엔드 개발 담당
+### 02. WebRTC Architecture Migration · 2025.02
+P2P → SFU 전환
+ 
+참가자가 늘수록 각 브라우저가 모든 상대에게 영상을 따로 보내야 하는 P2P 구조의 한계를 줄이기 위해, 서버가 영상을 받아 나눠 주는 SFU 구조로 바꿨습니다.
+ 
+- 참가자 1명당 송신 연결 1개 + 상대별 수신 연결로 구조 변경
+- Node.js 서버에서 `wrtc`로 미디어를 받아 다른 참가자에게 전달
+### 03. Service Reconstruction · 2026.11 –
+프론트엔드 재구축, API 구현, 실제 배포
+ 
+- 화면 설계부터 다시 작성 (대시보드, 회의실)
+- 회의실 사용자 경험 개선 (아래 [주요 기능](#features))
+- 백엔드 API와 DB 정리, DB 접근을 백엔드로 일원화
+- AWS EC2 + Vercel에 배포하고, 서로 다른 네트워크(와이파이 ↔ LTE)에서 통화 확인
 
 ---
 
-</div>
+## Tech Stack
 
-## 🙋‍♀️ 프로젝트 소개 및 현재 상황
+| 영역 | 기술 |
+|---|---|
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui |
+| Backend | Node.js, Express 5, Socket.IO, `@roamhq/wrtc` (SFU) |
+| Database | MySQL 8, Prisma |
+| Infra | AWS EC2 (Ubuntu), Caddy (HTTPS), coturn (TURN), systemd, Vercel |
 
-이 프로젝트는 2025년 2월 졸업작품으로 팀(백엔드 1명, 프론트 2명, AI 1명)과 함께 개발한 웹 서비스입니다.  
-이후 리팩토링을 진행하면서, 클린 아키텍처와 현대적인 프론트엔드/백엔드 구조에 대해 더 깊이 있게 배우고 있습니다.
+## Architecture
+<img width="643" height="304" alt="image" src="https://github.com/user-attachments/assets/615e91fa-6022-4952-99c2-3c143c72ef06" />
 
-> **지금은 혼자서 전체 구조를 다시 설계하고 개선하는 중입니다.**  
-> 코드 품질, 확장성, 유지보수성을 높이는 것이 목표입니다.
+- 프론트엔드는 화면만 담당하고, 인증과 DB 접근은 모두 백엔드 API를 거칩니다.
+- TURN 서버 계정은 고정 비밀번호 대신 백엔드가 만료 시간이 있는 임시 자격 증명을 발급합니다.
 
----
-
-## 📌 프로젝트 개요
-
-**FaceMeet**는 실시간 화상회의 중 참가자의 표정을 분석하여  
-감정 상태를 시각화하고, 채팅과 회의록 기능까지 제공하는 웹 기반 플랫폼입니다.
-
----
-
-## ✨ 주요 기능
-
-- 👥 로그인 / 회원가입
-- 📹 WebRTC 기반 실시간 화상회의
-- 🧠 DeepFace 기반 표정 분석 및 감정 시각화
-- 💬 Socket.io 기반 실시간 채팅
-- 📄 회의록 자동 저장 및 열람 기능
-
----
-
-## 🧰 기술 스택
-
-| 영역         | 기술                                    |
-| ------------ | --------------------------------------- |
-| Frontend     | React, Next.js, TypeScript, TailwindCSS |
-| Backend      | Next.js, Node.js, Express, Socket.io    |
-| AI 분석 엔진 | Python, DeepFace                        |
-| Database     | MongoDB                                 |
-
----
-
-## 🔧 리팩토링 목표
-
-- 🧱 **클린 아키텍처 적용**  
-  `domain / application / infra` 구조를 적용해 관심사를 분리하고 테스트 용이성을 확보합니다.
-- ♻️ **컴포넌트 구조 정리 및 재사용성 향상**
-- ⚙️ **상태 관리 개선**  
-  (Zustand, TanStack Query 등 적용)
-- 🧪 **유지보수성과 테스트 가능성 확보**
-
----
-
-<div align="center">
-
-📌 이 저장소는 리팩토링 과정을 계속 기록하고 업데이트할 예정입니다.  
-작은 개선이라도 놓치지 않고 정리하려 노력하고 있습니다. 😊
-
-</div>
+### Frontend 폴더 구조
+```
+app/src
+├─ views      # 페이지 단위 화면 (대시보드, 회의실)
+├─ features   # 기능 단위 (회의 만들기, WebRTC 연결, 채팅)
+├─ entities   # 도메인 데이터와 API (user, meeting, chat)
+└─ shared     # 공통 UI, API 클라이언트
+```
+----
+📌 **Demo** [FACEMEET](https://facemeet.jy-portfolio.site/)
