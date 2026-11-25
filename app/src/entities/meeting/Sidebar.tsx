@@ -17,7 +17,7 @@ export function Sidebar() {
       </div>
 
       <ScrollArea className="h-[calc(100vh-220px)]">
-        <MeetingList />
+        <MeetingList showDelete={true} />
       </ScrollArea>
     </div>
   );

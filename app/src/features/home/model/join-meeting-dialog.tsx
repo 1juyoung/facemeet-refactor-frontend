@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { joinMeeting } from '@/app/src/entities/meeting/api/meetingApi';
 
 interface JoinMeetingDialogProps {
   open: boolean;
@@ -16,6 +21,27 @@ interface JoinMeetingDialogProps {
 }
 
 export function JoinMeetingDialog({ open, onOpenChange }: JoinMeetingDialogProps) {
+  const router = useRouter();
+  const [meetingId, setMeetingId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleJoin = async () => {
+    if (!meetingId.trim()) return;
+    setError('');
+    setLoading(true);
+    try {
+      await joinMeeting(meetingId.trim());
+      onOpenChange(false);
+      setMeetingId('');
+      router.push(`/meeting/${meetingId.trim()}`);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -28,19 +54,22 @@ export function JoinMeetingDialog({ open, onOpenChange }: JoinMeetingDialogProps
             <Label htmlFor="meetingId">회의 ID</Label>
             <Input
               id="meetingId"
-              // value={meetingId}
-              // onChange={(e) => setMeetingId(e.target.value)}
+              value={meetingId}
+              onChange={(e) => setMeetingId(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
               placeholder="회의 ID를 입력하세요"
             />
           </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
         </div>
         <DialogFooter>
           <Button
             type="submit"
             className="bg-green-500 hover:bg-green-600"
-            // onClick={handleJoinMeeting}
+            onClick={handleJoin}
+            disabled={loading || !meetingId.trim()}
           >
-            참가하기
+            {loading ? '참가 중...' : '참가하기'}
           </Button>
         </DialogFooter>
       </DialogContent>
