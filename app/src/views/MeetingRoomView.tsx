@@ -127,6 +127,8 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
   const [participants, setParticipants] = useState<Record<string, ParticipantState>>({});
   const joinPayloadRef = useRef<JoinPayload>({ audio: false, video: false });
   const [showViewOnlyNotice, setShowViewOnlyNotice] = useState(false);
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+  const handleTogglePin = useCallback((id: string) => setPinnedId((cur) => (cur === id ? null : id)), []);
 
   const handleParticipantEvent = useCallback((event: ParticipantEvent) => {
     setParticipants((prev) => {
@@ -237,6 +239,9 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
     return [me, ...others];
   }, [mySocketId, user?.nickname, localStream, media, participants, users]);
 
+  // 크게 보던 사람이 나가면 원래 배치로
+  const activePinnedId = pinnedId && tiles.some((t) => t.id === pinnedId) ? pinnedId : null;
+
   return (
     <div className="flex h-dvh flex-col bg-room text-white">
       <header className="flex items-center gap-3 border-b border-white/5 px-4 py-3 md:px-6">
@@ -262,7 +267,7 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
 
       <div className="relative flex min-h-0 flex-1">
         <main className="min-w-0 flex-1">
-          <VideoGrid tiles={tiles} />
+          <VideoGrid tiles={tiles} pinnedId={activePinnedId} onTogglePin={handleTogglePin} />
         </main>
 
         {/* 채팅: 넓은 화면에서는 옆에, 좁은 화면에서는 위에 겹쳐서 */}

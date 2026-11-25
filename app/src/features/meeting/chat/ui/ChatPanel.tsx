@@ -75,6 +75,7 @@ export function ChatPanel({ messages, mySocketId, onSend }: ChatPanelProps) {
           send();
         }}
       >
+        {/* 모바일 사파리는 16px 미만 입력창에 포커스하면 화면을 확대하므로 모바일에서는 16px */}
         <input
           value={text}
           maxLength={MAX_LENGTH}
@@ -85,7 +86,7 @@ export function ChatPanel({ messages, mySocketId, onSend }: ChatPanelProps) {
           }}
           placeholder="메시지를 입력하세요"
           aria-label="채팅 메시지"
-          className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+          className="min-w-0 flex-1 bg-transparent text-base text-white md:text-sm outline-none placeholder:text-white/35"
         />
         <button
           type="submit"

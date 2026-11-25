@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MicOff, Play, VideoOff } from 'lucide-react';
+import { MicOff, Minimize2, Play, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface TileModel {
@@ -16,15 +16,24 @@ export interface TileModel {
 interface VideoTileProps {
   tile: TileModel;
   className?: string;
+  /** 하단 목록에 들어가는 작은 타일 */
+  compact?: boolean;
+  /** 크게 보기로 고정된 타일 */
+  pinned?: boolean;
+  /** 더블클릭(모바일은 두 번 탭) 시 호출 */
+  onDoubleActivate?: () => void;
 }
+
+const DOUBLE_TAP_MS = 300;
 
 /**
  * 참가자 한 명의 화면.
  * 카메라가 꺼져 있거나 권한이 없어도 같은 크기의 블록을 차지하고, 아바타와 상태를 보여준다.
  * <video>는 스트림이 있으면 항상 마운트해 둔다 (카메라가 꺼져도 소리는 들려야 하므로).
  */
-export function VideoTile({ tile, className }: VideoTileProps) {
+export function VideoTile({ tile, className, compact, pinned, onDoubleActivate }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastTapRef = useRef(0);
   const [needsTap, setNeedsTap] = useState(false);
 
   useEffect(() => {
@@ -41,10 +50,26 @@ export function VideoTile({ tile, className }: VideoTileProps) {
   const showVideo = !!tile.stream && tile.video;
   const label = tile.isLocal ? `${tile.nickname} (나)` : tile.nickname;
 
+  // 모바일 브라우저는 dblclick이 일정하지 않아 클릭 간격으로 두 번 탭을 직접 판별한다
+  const handleClick = () => {
+    if (!onDoubleActivate) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+      lastTapRef.current = 0;
+      onDoubleActivate();
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
   return (
     <div
+      onClick={handleClick}
+      title={onDoubleActivate ? (pinned ? '더블클릭해서 원래대로' : '더블클릭해서 크게 보기') : undefined}
       className={cn(
-        'relative isolate min-h-0 min-w-0 overflow-hidden rounded-2xl bg-room-2 ring-1 ring-white/5',
+        'relative isolate min-h-0 min-w-0 touch-manipulation overflow-hidden bg-room-2 ring-1 ring-white/5 select-none',
+        compact ? 'rounded-xl' : 'rounded-2xl',
+        onDoubleActivate && 'cursor-pointer',
         className
       )}
     >
@@ -55,7 +80,7 @@ export function VideoTile({ tile, className }: VideoTileProps) {
           playsInline
           muted={tile.isLocal}
           className={cn(
-            'absolute inset-0 size-full object-cover',
+            'absolute inset-0 size-full object-contain', // 잘리거나 확대되지 않게 원본 비율 유지
             tile.isLocal && '-scale-x-100', // 내 화면은 거울처럼
             !showVideo && 'invisible'
           )}
@@ -64,29 +89,57 @@ export function VideoTile({ tile, className }: VideoTileProps) {
 
       {!showVideo && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5">
-          <span className="grid size-16 place-items-center rounded-full bg-brand text-2xl font-extrabold text-white md:size-20 md:text-3xl">
+          <span
+            className={cn(
+              'grid place-items-center rounded-full bg-brand font-extrabold text-white',
+              compact ? 'size-9 text-base' : 'size-16 text-2xl md:size-20 md:text-3xl'
+            )}
+          >
             {tile.nickname.slice(0, 1)}
           </span>
-          <span className="flex items-center gap-1 text-xs font-semibold text-white/50">
-            <VideoOff size={13} />
-            {tile.stream ? '카메라 꺼짐' : '카메라 없음'}
-          </span>
+          {!compact && (
+            <span className="flex items-center gap-1 text-xs font-semibold text-white/50">
+              <VideoOff size={13} />
+              {tile.stream ? '카메라 꺼짐' : '카메라 없음'}
+            </span>
+          )}
         </div>
       )}
 
-      <div className="absolute bottom-2.5 left-2.5 flex max-w-[calc(100%-1.25rem)] items-center gap-1.5 rounded-lg bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur">
+      <div
+        className={cn(
+          'absolute flex items-center gap-1.5 rounded-lg bg-black/55 font-semibold text-white backdrop-blur',
+          compact
+            ? 'bottom-1.5 left-1.5 max-w-[calc(100%-0.75rem)] px-1.5 py-0.5 text-[11px]'
+            : 'bottom-2.5 left-2.5 max-w-[calc(100%-1.25rem)] px-2 py-1 text-xs'
+        )}
+      >
         {!tile.audio && <MicOff size={13} className="shrink-0 text-red-400" aria-label="마이크 꺼짐" />}
         <span className="truncate">{label}</span>
       </div>
 
+      {pinned && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDoubleActivate?.();
+          }}
+          className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-lg bg-black/55 px-2 py-1 text-xs font-semibold text-white backdrop-blur hover:bg-black/70"
+        >
+          <Minimize2 size={13} />
+          원래대로
+        </button>
+      )}
+
       {needsTap && !tile.isLocal && (
         <button
-          onClick={() =>
+          onClick={(e) => {
+            e.stopPropagation();
             videoRef.current
               ?.play()
               .then(() => setNeedsTap(false))
-              .catch(() => {})
-          }
+              .catch(() => {});
+          }}
           className="absolute inset-0 grid place-items-center bg-black/50 text-sm font-bold text-white"
         >
           <span className="flex items-center gap-2 rounded-full bg-white/15 px-4 py-2">
