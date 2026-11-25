@@ -3,6 +3,8 @@
 import React, { useEffect, useCallback } from 'react';
 import { useMediaStream } from '../features/meeting/webrtc/model/useMediaStream';
 import { usePeerConnection } from '../features/meeting/webrtc/model/usePeerConnection';
+import { addIceCandidateSafely, setRemoteAndFlush } from '../features/meeting/webrtc/model/iceCandidateQueue';
+import { loadIceServers } from '../features/meeting/webrtc/model/iceConfig';
 import { useSocketSignaling } from '../features/meeting/webrtc/model/useSocketSignaling';
 import { VideoGrid } from '../features/meeting/webrtc/ui/VideoGrid';
 import { Button } from '@/components/ui/button';
@@ -60,7 +62,7 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
   const handleSenderAnswer = useCallback(
     async (sdp: RTCSessionDescriptionInit) => {
       if (!sendPCRef.current) return;
-      await sendPCRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
+      await setRemoteAndFlush(sendPCRef.current, sdp);
     },
     [sendPCRef]
   );
@@ -68,7 +70,7 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
   const handleSenderCandidate = useCallback(
     async (candidate: RTCIceCandidateInit) => {
       if (!sendPCRef.current) return;
-      await sendPCRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      await addIceCandidateSafely(sendPCRef.current, candidate);
     },
     [sendPCRef]
   );
@@ -77,7 +79,7 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
     async (id: string, sdp: RTCSessionDescriptionInit) => {
       const pc = receivePCsRef.current[id];
       if (!pc) return;
-      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      await setRemoteAndFlush(pc, sdp);
     },
     [receivePCsRef]
   );
@@ -86,10 +88,16 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
     async (id: string, candidate: RTCIceCandidateInit) => {
       const pc = receivePCsRef.current[id];
       if (!pc) return;
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      await addIceCandidateSafely(pc, candidate);
     },
     [receivePCsRef]
   );
+
+  // 소켓 연결이 끝나 socket.id가 생긴 뒤에 송신 offer를 보낸다
+  const handleConnected = useCallback(() => {
+    createSenderOffer(socketRef, meetingId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createSenderOffer, meetingId]);
 
   const { socketRef, connect, disconnect } = useSocketSignaling({
     roomId: meetingId,
@@ -100,15 +108,15 @@ export default function MeetingRoomView({ meetingId }: MeetingRoomViewProps) {
     onSenderCandidate: handleSenderCandidate,
     onReceiverAnswer: handleReceiverAnswer,
     onReceiverCandidate: handleReceiverCandidate,
+    onConnected: handleConnected,
   });
 
   useEffect(() => {
     const init = async () => {
-      const stream = await startLocalStream();
+      const [stream] = await Promise.all([startLocalStream(), loadIceServers()]);
       if (!stream) return;
       createSenderPC(socketRef, localStreamRef);
       connect();
-      await createSenderOffer(socketRef, meetingId);
     };
     init();
 

@@ -14,6 +14,8 @@ interface UseSocketSignalingParams {
   onSenderCandidate: (candidate: RTCIceCandidateInit) => Promise<void>;
   onReceiverAnswer: (id: string, sdp: RTCSessionDescriptionInit) => Promise<void>;
   onReceiverCandidate: (id: string, candidate: RTCIceCandidateInit) => Promise<void>;
+  /** 소켓 연결이 완료된 뒤 호출 (socket.id가 확정된 시점) */
+  onConnected?: () => void;
 }
 
 export interface UseSocketSignalingReturn {
@@ -31,6 +33,7 @@ export function useSocketSignaling({
   onSenderCandidate,
   onReceiverAnswer,
   onReceiverCandidate,
+  onConnected,
 }: UseSocketSignalingParams): UseSocketSignalingReturn {
   const socketRef = useRef<Socket | null>(null);
 
@@ -47,6 +50,7 @@ export function useSocketSignaling({
 
       socket.on('connect', () => {
         socket.emit('joinRoom', { id: socket.id, roomID: roomId });
+        onConnected?.();
       });
 
       socket.on('userEnter', (data: { id: string }) => onUserEnter(data.id));
@@ -78,6 +82,7 @@ export function useSocketSignaling({
     onSenderCandidate,
     onReceiverAnswer,
     onReceiverCandidate,
+    onConnected,
   ]);
 
   useEffect(() => {
