@@ -56,10 +56,7 @@ export function usePeerConnection(): UsePeerConnectionReturn {
   const createSenderOffer = useCallback(async (socketRef: SocketRef, roomId: string): Promise<void> => {
     if (!sendPCRef.current || !socketRef.current) return;
     try {
-      const sdp = await sendPCRef.current.createOffer({
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false,
-      });
+      const sdp = await sendPCRef.current.createOffer();
       await sendPCRef.current.setLocalDescription(new RTCSessionDescription(sdp));
       socketRef.current.emit('senderOffer', {
         sdp,
@@ -85,10 +82,16 @@ export function usePeerConnection(): UsePeerConnectionReturn {
         });
       };
 
+      // 오디오·비디오 트랙이 따로 도착하므로 한 스트림으로 모은다 (streams가 비어 오는 브라우저 대비)
+      let remoteStream: MediaStream | null = null;
       pc.ontrack = (e) => {
-        setUsers((prev) =>
-          prev.filter((u) => u.id !== socketId).concat({ id: socketId, stream: e.streams[0] })
-        );
+        if (e.streams[0]) remoteStream = e.streams[0];
+        else {
+          remoteStream = remoteStream ?? new MediaStream();
+          remoteStream.addTrack(e.track);
+        }
+        const stream = remoteStream;
+        setUsers((prev) => prev.filter((u) => u.id !== socketId).concat({ id: socketId, stream }));
       };
 
       return pc;
@@ -101,7 +104,10 @@ export function usePeerConnection(): UsePeerConnectionReturn {
   const createReceiverOffer = useCallback(
     async (pc: RTCPeerConnection, socketRef: SocketRef, senderSocketId: string, roomId: string): Promise<void> => {
       try {
-        const sdp = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+        // 받기 전용 트랜시버를 명시적으로 추가 (레거시 offerToReceive* 옵션은 일부 모바일 브라우저에서 미지원)
+        pc.addTransceiver('audio', { direction: 'recvonly' });
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        const sdp = await pc.createOffer();
         await pc.setLocalDescription(new RTCSessionDescription(sdp));
         if (!socketRef.current) return;
         socketRef.current.emit('receiverOffer', {

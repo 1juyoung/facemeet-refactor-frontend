@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import type { Socket } from 'socket.io-client';
 import type { ChatMessage } from '@/app/src/entities/chat/types';
+import type { JoinPayload, ParticipantEvent, ParticipantState } from '@/app/src/entities/meeting';
 
 const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
@@ -19,6 +20,9 @@ interface UseSocketSignalingParams {
   onConnected?: () => void;
   onChatHistory?: (messages: ChatMessage[]) => void;
   onChatMessage?: (message: ChatMessage) => void;
+  /** 입장할 때 서버에 알릴 닉네임·마이크·카메라 상태 (연결 시점의 값을 읽음) */
+  joinPayloadRef?: React.MutableRefObject<JoinPayload>;
+  onParticipantEvent?: (event: ParticipantEvent) => void;
 }
 
 export interface UseSocketSignalingReturn {
@@ -39,6 +43,8 @@ export function useSocketSignaling({
   onConnected,
   onChatHistory,
   onChatMessage,
+  joinPayloadRef,
+  onParticipantEvent,
 }: UseSocketSignalingParams): UseSocketSignalingReturn {
   const socketRef = useRef<Socket | null>(null);
 
@@ -54,7 +60,7 @@ export function useSocketSignaling({
       socketRef.current = socket;
 
       socket.on('connect', () => {
-        socket.emit('joinRoom', { id: socket.id, roomID: roomId });
+        socket.emit('joinRoom', { id: socket.id, roomID: roomId, ...joinPayloadRef?.current });
         onConnected?.();
       });
 
@@ -73,6 +79,17 @@ export function useSocketSignaling({
       socket.on('getReceiverAnswer', async (data: { id: string; sdp: RTCSessionDescriptionInit }) => {
         await onReceiverAnswer(data.id, data.sdp);
       });
+
+      socket.on('participants:list', (data: { participants: ParticipantState[] }) =>
+        onParticipantEvent?.({ type: 'list', participants: data.participants })
+      );
+      socket.on('participant:joined', (data: { participant: ParticipantState }) =>
+        onParticipantEvent?.({ type: 'joined', participant: data.participant })
+      );
+      socket.on('participant:updated', (data: { participant: ParticipantState }) =>
+        onParticipantEvent?.({ type: 'updated', participant: data.participant })
+      );
+      socket.on('participant:left', (data: { id: string }) => onParticipantEvent?.({ type: 'left', id: data.id }));
 
       socket.on('chat:history', (data: { messages: ChatMessage[] }) => onChatHistory?.(data.messages));
       socket.on('chat:message', (message: ChatMessage) => onChatMessage?.(message));
@@ -93,6 +110,8 @@ export function useSocketSignaling({
     onConnected,
     onChatHistory,
     onChatMessage,
+    joinPayloadRef,
+    onParticipantEvent,
   ]);
 
   useEffect(() => {
